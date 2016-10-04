@@ -61,9 +61,9 @@ public class JDBCExample {
             System.out.println("-----------------------");
             
             
-            int suCodigoECI=20134423;
-            registrarNuevoProducto(con, suCodigoECI, "SU NOMBRE", 99999999);            
-            con.commit();
+            int suCodigoECI=2095498;
+            //registrarNuevoProducto(con, suCodigoECI, "SU NOMBRE", 99999999);            
+            //con.commit();
             
             cambiarNombreProducto(con, suCodigoECI, "EL NUEVO NOMBRE");
             con.commit();
@@ -91,7 +91,7 @@ public class JDBCExample {
         //Asignar parámetros
         //usar 'execute'
         
-        PreparedStatement RegistoDenuevoProducto = con.prepareStatement("insert into ORD_PRODUCTOS(CODIGO,NOMBRE,PRECIO) values(?,?,?)");
+        PreparedStatement RegistoDenuevoProducto = con.prepareStatement("INSERT INTO ORD_PRODUCTOS(CODIGO,NOMBRE,PRECIO) VALUES(?,?,?)");
         RegistoDenuevoProducto.setInt(1, codigo);
         RegistoDenuevoProducto.setString(2, nombre);
         RegistoDenuevoProducto.setInt(3, precio);
@@ -108,12 +108,6 @@ public class JDBCExample {
      */
     public static List<String> nombresProductosPedido(Connection con, int codigoPedido){
         List<String> np=new LinkedList<>();
-        
-        //Crear prepared statement
-        //asignar parámetros
-        //usar executeQuery
-        //Sacar resultados del ResultSet
-        //Llenar la lista y retornarla
         try{
             PreparedStatement ProductosPedidos = con.prepareStatement("SELECT NOMBRE FROM ORD_PRODUCTOS WHERE codigo = ?");
             ProductosPedidos.setInt(1, codigoPedido);
@@ -143,13 +137,20 @@ public class JDBCExample {
         //Sacar resultado del ResultSet
         int res = 0;
         try{
-            String consulta = "select (SUM(ORP.precio)*SUM(ODP.cantidad)) from ORD_PEDIDOS OP join ORD_DETALLES_PEDIDO ODP(OP.Codigo=ODP.pedidos)"
-                    + " join ORD_PRODUCTOS ORP(ORP.Codigo=ODP.producto) where OP.codigo = ?";
+            String consulta = "select SUM(ORD_PRODUCTOS.precio*ORD_DETALLES_PEDIDO.cantidad) "
+                    + "FROM ORD_PRODUCTOS,ORD_DETALLES_PEDIDO "
+                    + "where ORD_PRODUCTOS.Codigo=ORD_DETALLES_PEDIDO.producto_fk AND ORD_PRODUCTOS.codigo = ? ";
             PreparedStatement valorTotal = con.prepareStatement(consulta);
             valorTotal.setInt(1, codigoPedido);
-            res = valorTotal.executeUpdate();
+            ResultSet valor = valorTotal.executeQuery();
+            if (valor.next()){
+                res=valor.getInt(1);
+            }
+            
         }catch(SQLException ex){
+            System.out.println(ex.getMessage());
             System.out.println("FALLO EN VALOR PEDIDO");
+            
         }
         return res;
     }
@@ -161,24 +162,16 @@ public class JDBCExample {
      * @param codigoProducto codigo del producto cuyo nombre se cambiará
      * @param nuevoNombre el nuevo nombre a ser asignado
      */
-    public static void cambiarNombreProducto(Connection con, int codigoProducto, 
-            String nuevoNombre){
-        
-        //Crear prepared statement
-        //asignar parámetros
-        //usar executeUpdate
-        //verificar que se haya actualizado exactamente un registro
+    public static void cambiarNombreProducto(Connection con, int codigoProducto, String nuevoNombre){
         String update = "UPDATE ORD_PRODUCTOS SET NOMBRE = ? WHERE CODIGO = ?";
         try{
             PreparedStatement Nombre = con.prepareStatement(update);
             Nombre.setInt(1, codigoProducto);
             Nombre.setString(2, nuevoNombre);
             Nombre.executeUpdate();
+            con.commit();
        }catch(SQLException ex){
             System.out.println("FALLO EN CAMBIAR NOMBRE DEL PRODUCTO");
         }
     }
-    
-    
-    
 }
