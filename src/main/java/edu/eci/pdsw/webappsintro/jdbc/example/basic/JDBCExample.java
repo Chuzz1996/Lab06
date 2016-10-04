@@ -90,12 +90,12 @@ public class JDBCExample {
         //Crear preparedStatement
         //Asignar parámetros
         //usar 'execute'
-        /*
+        
         PreparedStatement RegistoDenuevoProducto = con.prepareStatement("insert into ORD_PRODUCTOS(CODIGO,NOMBRE,PRECIO) values(?,?,?)");
         RegistoDenuevoProducto.setInt(1, codigo);
         RegistoDenuevoProducto.setString(2, nombre);
         RegistoDenuevoProducto.setInt(3, precio);
-        RegistoDenuevoProducto.executeUpdate();*/
+        RegistoDenuevoProducto.executeUpdate();
         con.commit();
         
     }
