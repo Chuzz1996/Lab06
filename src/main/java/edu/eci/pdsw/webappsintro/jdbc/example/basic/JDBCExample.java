@@ -34,15 +34,19 @@ public class JDBCExample {
     
     public static void main(String args[]){
         try {
-            String url="jdbc:mysql://HOST:3306/BD";
+            String url="jdbc:mysql://desarrollo.is.escuelaing.edu.co:3306/bdprueba";
             String driver="com.mysql.jdbc.Driver";
-            String user="USER";
-            String pwd="PWD";
+            String user="bdprueba";
+            String pwd="bdprueba";
                         
             Class.forName(driver);
             Connection con=DriverManager.getConnection(url,user,pwd);
             con.setAutoCommit(false);
                  
+            //PreparedStatement valorPedido;
+            
+            //valorPedido.addBatch("Valor total pedido 1:"+valorTotalPedido(con, 1));
+            //valorPedido.
             
             System.out.println("Valor total pedido 1:"+valorTotalPedido(con, 1));
             
@@ -86,8 +90,12 @@ public class JDBCExample {
         //Crear preparedStatement
         //Asignar parámetros
         //usar 'execute'
-
-        
+        /*
+        PreparedStatement RegistoDenuevoProducto = con.prepareStatement("insert into ORD_PRODUCTOS(CODIGO,NOMBRE,PRECIO) values(?,?,?)");
+        RegistoDenuevoProducto.setInt(1, codigo);
+        RegistoDenuevoProducto.setString(2, nombre);
+        RegistoDenuevoProducto.setInt(3, precio);
+        RegistoDenuevoProducto.executeUpdate();*/
         con.commit();
         
     }
@@ -106,6 +114,16 @@ public class JDBCExample {
         //usar executeQuery
         //Sacar resultados del ResultSet
         //Llenar la lista y retornarla
+        try{
+            PreparedStatement ProductosPedidos = con.prepareStatement("SELECT NOMBRE FROM ORD_PRODUCTOS WHERE codigo = ?");
+            ProductosPedidos.setInt(1, codigoPedido);
+            ResultSet rs = ProductosPedidos.executeQuery();
+            while(rs.next()){
+                np.add(rs.getString(1));
+            }
+        }catch(SQLException ex){
+            System.out.println("FALLO EN NOMBRE PRODUCTOS");
+        }
         
         return np;
     }
@@ -123,8 +141,17 @@ public class JDBCExample {
         //asignar parámetros
         //usar executeQuery
         //Sacar resultado del ResultSet
-        
-        return 0;
+        int res = 0;
+        try{
+            String consulta = "select (SUM(ORP.precio)*SUM(ODP.cantidad)) from ORD_PEDIDOS OP join ORD_DETALLES_PEDIDO ODP(OP.Codigo=ODP.pedidos)"
+                    + " join ORD_PRODUCTOS ORP(ORP.Codigo=ODP.producto) where OP.codigo = ?";
+            PreparedStatement valorTotal = con.prepareStatement(consulta);
+            valorTotal.setInt(1, codigoPedido);
+            res = valorTotal.executeUpdate();
+        }catch(SQLException ex){
+            System.out.println("FALLO EN VALOR PEDIDO");
+        }
+        return res;
     }
     
 
@@ -141,8 +168,15 @@ public class JDBCExample {
         //asignar parámetros
         //usar executeUpdate
         //verificar que se haya actualizado exactamente un registro
-        
-        
+        String update = "UPDATE ORD_PRODUCTOS SET NOMBRE = ? WHERE CODIGO = ?";
+        try{
+            PreparedStatement Nombre = con.prepareStatement(update);
+            Nombre.setInt(1, codigoProducto);
+            Nombre.setString(2, nuevoNombre);
+            Nombre.executeUpdate();
+       }catch(SQLException ex){
+            System.out.println("FALLO EN CAMBIAR NOMBRE DEL PRODUCTO");
+        }
     }
     
     
